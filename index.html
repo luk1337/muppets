@@ -104,43 +104,36 @@
                             .then(value => value.text())
                             .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
                             .then(value => Array.from(value.getElementsByTagName("project")))
-                            .then(value => value.map(x => x.getAttribute('name')))
+                            .then(value => Object.assign({}, ...value.map(x => ({
+                                [x.getAttribute('name').substring('TheMuppets/'.length)]: {
+                                    name: x.getAttribute('name'),
+                                    path: x.getAttribute('path'),
+                                    remote: 'github',
+                                }
+                            }))))
                         let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
                             .then(value => value.text())
                             .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
                             .then(value => Array.from(value.getElementsByTagName("project")))
-                            .then(value => value.map(x => x.getAttribute('name')))
+                            .then(value => Object.assign({}, ...value.map(x => ({
+                                [x.getAttribute('name').substring('The-Muppets/'.length)]: {
+                                    name: x.getAttribute('name'),
+                                    path: x.getAttribute('path'),
+                                    remote: 'gitlab',
+                                }
+                            }))))
                         let muppets_repos = await ([oem, name, ...dependencies]
                             .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
                             .reduce(async (acc, x) => {
-                                if (muppets_gh.includes(`TheMuppets/${x}`)) {
-                                    return (await acc).concat({
-                                        remote: 'github',
-                                        name: `TheMuppets/${x}`,
-                                        path: x.substring('proprietary_'.length).replaceAll('_', '/'),
-                                    })
-                                }
-
-                                if (muppets_gl.includes(`The-Muppets/${x}`)) {
-                                    return (await acc).concat({
-                                        remote: 'gitlab',
-                                        name: `The-Muppets/${x}`,
-                                        path: x.substring('proprietary_'.length).replaceAll('_', '/'),
-                                    })
-                                }
-
-                                return acc
+                                let project = muppets_gh[x] || muppets_gl[x]
+                                return project !== undefined ? (await acc).concat(project) : acc
                             }, []))
 
                         let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
                             .then(value => value.status === 200)
 
                         if (has_firmware) {
-                            muppets_repos.push({
-                                remote: 'gitlab',
-                                name: `The-Muppets/proprietary_vendor_firmware`,
-                                path: 'vendor/firmware'
-                            })
+                            muppets_repos.push(Object.values(muppets_gl).find(x => x.path === 'vendor/firmware'))
                         }
 
                         if (muppets_repos.length === 0) {
