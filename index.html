@@ -100,6 +100,11 @@
                         let dependencies = (await fetch_deps([], name))
                             .filter(x => x.startsWith('android_device_'))
 
+                        if (dependencies.length === 0) {
+                            alert(`Failed to parse device dependencies (perhaps ${codename} is not supported on ${branch}?)`)
+                            return
+                        }
+
                         let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
                             .then(value => value.text())
                             .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
