@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>〜 muppets 〜</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            input, select {
+                box-sizing: border-box;
+                width: 300px;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="content" style="display: none">
+            <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Codename" />
+            <br />
+            <select id="branches">
+                <option>lineage-20</option>
+                <option>lineage-19.1</option>
+                <option>lineage-18.1</option>
+                <option>lineage-17.1</option>
+                <option>lineage-16.0</option>
+                <option>lineage-15.1</option>
+                <option>cm-14.1</option>
+                <option>cm-13.0</option>
+            </select>
+            <br />
+            <input id="submit" type="submit" value="Generate manifest" />
+            <br />
+            <br />
+            <textarea id="output" rows="10" cols="50" style="display: none"></textarea>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.3.2/dist/browser/xml-formatter-singleton.min.js"></script>
+        <script>
+            (async () => {
+                let repos = await fetch('https://raw.githubusercontent.com/LineageOS/mirror/master/default.xml')
+                    .then(value => value.text())
+                    .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
+                    .then(value => Array.from(value.getElementsByTagName("project")))
+                    .then(value => value.map(x => x.getAttribute('name')))
+
+                document.getElementById('submit').onclick = () => {
+                    (async () => {
+                        let output = document.getElementById('output')
+                        output.setAttribute('style', 'display: none')
+
+                        let codename = document.getElementById('codename').value
+
+                        if (codename.length === 0) {
+                            alert('Codename cannot be empty!')
+                            return
+                        }
+
+                        let name = repos.find(x => x.match(`LineageOS/android_device_\\w+_${codename}$`))
+
+                        if (name === undefined) {
+                            alert('Device not found!')
+                            return
+                        }
+
+                        let branch = document.getElementById('branches').value
+
+                        let fetch_deps = async (out, name) => {
+                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch}/lineage.dependencies`)
+                                .then(value => value.text())
+                                .then(value => JSON.parse(value))
+                                .then(value => value.map(x => x['repository']))
+                                .catch(error => [])
+
+                            for (let dep of dependencies) {
+                                out = await fetch_deps(out, `LineageOS/${dep}`)
+                            }
+
+                            return out.concat(dependencies)
+                        }
+                        let dependencies = (await fetch_deps([], name))
+                            .filter(x => x.startsWith('android_device_'))
+
+                        let muppets_repos = await ([name, ...dependencies]
+                            .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
+                            .reduce(async (acc, x) => {
+                                let existsGh = await fetch(`https://raw.githubusercontent.com/TheMuppets/${x}/${branch}/Android.mk`, { method: 'HEAD' })
+                                    .then(x => x.status === 200)
+                                if (existsGh) {
+                                    return (await acc).concat({
+                                        remote: 'github',
+                                        name: `TheMuppets/${x}`,
+                                        path: x.substring('proprietary_'.length).replaceAll('_', '/'),
+                                    })
+                                }
+
+                                let existsGl = await fetch(`https://cdn.statically.io/gl/the-muppets/${x}/${branch}/Android.mk`, { method: 'HEAD' })
+                                    .then(x => x.status === 200)
+                                if (existsGl) {
+                                    return (await acc).concat({
+                                        remote: 'gitlab',
+                                        name: `the-muppets/${x}`,
+                                        path: x.substring('proprietary_'.length).replaceAll('_', '/'),
+                                    })
+                                }
+
+                                return acc
+                            }, []))
+
+                        let local_manifest = document.implementation.createDocument(null, 'manifest')
+                        local_manifest.insertBefore(
+                            local_manifest.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"'),
+                            local_manifest.firstChild
+                        )
+
+                        if (muppets_repos.some(x => x.remote === 'gitlab')) {
+                            let remote = local_manifest.createElement('remote')
+                            remote.setAttribute('fetch', 'https://gitlab.com')
+                            remote.setAttribute('name', 'gitlab')
+
+                            local_manifest.documentElement.appendChild(remote)
+                        }
+
+                        for (repo of muppets_repos) {
+                            let project = local_manifest.createElement('project')
+                            project.setAttribute('name', repo.name)
+                            project.setAttribute('path', repo.path)
+                            project.setAttribute('remote', repo.remote)
+                            project.setAttribute('revision', branch)
+
+                            local_manifest.documentElement.appendChild(project)
+                        }
+
+                        output.innerHTML = xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
+                        output.removeAttribute('style')
+                    })()
+                }
+
+                document.getElementById('content').removeAttribute('style')
+                document.getElementById('codename').focus()
+            })()
+        </script>
+    </body>
+</html>
