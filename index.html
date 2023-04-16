@@ -57,118 +57,116 @@
                     .then(value => Array.from(value.getElementsByTagName("project")))
                     .then(value => value.map(x => x.getAttribute('name')))
 
-                document.getElementById('submit').onclick = () => {
-                    (async () => {
-                        let output = document.getElementById('output')
-                        output.setAttribute('style', 'display: none')
+                document.getElementById('submit').onclick = async () => {
+                    let output = document.getElementById('output')
+                    output.setAttribute('style', 'display: none')
 
-                        let codename = document.getElementById('codename').value
+                    let codename = document.getElementById('codename').value
 
-                        if (codename.length === 0) {
-                            alert('Codename cannot be empty!')
-                            return
+                    if (codename.length === 0) {
+                        alert('Codename cannot be empty!')
+                        return
+                    }
+
+                    let name = repos.find(x => x.match(`LineageOS/android_device_\\w+_${codename}$`))
+
+                    if (name === undefined) {
+                        alert('Device not found!')
+                        return
+                    }
+
+                    let branch = document.getElementById('branches').value
+                    let branch_short = branch
+                    if (parseFloat(branch.split('-')[1]) >= 20) {
+                        branch_short = branch.substring(0, branch.length - 2)
+                    }
+
+                    let fetch_deps = async (out, name) => {
+                        let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch_short}/lineage.dependencies`)
+                            .then(value => value.text())
+                            .then(value => JSON.parse(value))
+                            .then(value => value.map(x => x['repository']))
+                            .catch(error => [])
+
+                        for (let dep of dependencies) {
+                            out = await fetch_deps(out, `LineageOS/${dep}`)
                         }
 
-                        let name = repos.find(x => x.match(`LineageOS/android_device_\\w+_${codename}$`))
+                        return out.concat(dependencies)
+                    }
 
-                        if (name === undefined) {
-                            alert('Device not found!')
-                            return
-                        }
+                    let oem = name.split('_').slice(0, 3).join('_')
+                    let dependencies = (await fetch_deps([], name))
+                        .filter(x => x.startsWith('android_device_'))
 
-                        let branch = document.getElementById('branches').value
-                        let branch_short = branch
-                        if (parseFloat(branch.split('-')[1]) >= 20) {
-                            branch_short = branch.substring(0, branch.length - 2)
-                        }
-
-                        let fetch_deps = async (out, name) => {
-                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch_short}/lineage.dependencies`)
-                                .then(value => value.text())
-                                .then(value => JSON.parse(value))
-                                .then(value => value.map(x => x['repository']))
-                                .catch(error => [])
-
-                            for (let dep of dependencies) {
-                                out = await fetch_deps(out, `LineageOS/${dep}`)
+                    let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
+                        .then(value => value.text())
+                        .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
+                        .then(value => Array.from(value.getElementsByTagName("project")))
+                        .then(value => Object.assign({}, ...value.map(x => ({
+                            [x.getAttribute('name').substring('TheMuppets/'.length)]: {
+                                name: x.getAttribute('name'),
+                                path: x.getAttribute('path'),
+                                remote: 'github',
                             }
+                        }))))
+                    let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
+                        .then(value => value.text())
+                        .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
+                        .then(value => Array.from(value.getElementsByTagName("project")))
+                        .then(value => Object.assign({}, ...value.map(x => ({
+                            [x.getAttribute('name').substring('The-Muppets/'.length)]: {
+                                name: x.getAttribute('name'),
+                                path: x.getAttribute('path'),
+                                remote: 'gitlab',
+                            }
+                        }))))
+                    let muppets_repos = await ([oem, name, ...dependencies]
+                        .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
+                        .reduce(async (acc, x) => {
+                            let project = muppets_gh[x] || muppets_gl[x]
+                            return project !== undefined ? (await acc).concat(project) : acc
+                        }, []))
 
-                            return out.concat(dependencies)
-                        }
+                    let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
+                        .then(value => value.status === 200)
 
-                        let oem = name.split('_').slice(0, 3).join('_')
-                        let dependencies = (await fetch_deps([], name))
-                            .filter(x => x.startsWith('android_device_'))
+                    if (has_firmware) {
+                        muppets_repos.push(Object.values(muppets_gl).find(x => x.path === 'vendor/firmware'))
+                    }
 
-                        let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
-                            .then(value => value.text())
-                            .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
-                            .then(value => Array.from(value.getElementsByTagName("project")))
-                            .then(value => Object.assign({}, ...value.map(x => ({
-                                [x.getAttribute('name').substring('TheMuppets/'.length)]: {
-                                    name: x.getAttribute('name'),
-                                    path: x.getAttribute('path'),
-                                    remote: 'github',
-                                }
-                            }))))
-                        let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
-                            .then(value => value.text())
-                            .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
-                            .then(value => Array.from(value.getElementsByTagName("project")))
-                            .then(value => Object.assign({}, ...value.map(x => ({
-                                [x.getAttribute('name').substring('The-Muppets/'.length)]: {
-                                    name: x.getAttribute('name'),
-                                    path: x.getAttribute('path'),
-                                    remote: 'gitlab',
-                                }
-                            }))))
-                        let muppets_repos = await ([oem, name, ...dependencies]
-                            .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
-                            .reduce(async (acc, x) => {
-                                let project = muppets_gh[x] || muppets_gl[x]
-                                return project !== undefined ? (await acc).concat(project) : acc
-                            }, []))
+                    if (muppets_repos.length === 0) {
+                        alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
+                        return
+                    }
 
-                        let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
-                            .then(value => value.status === 200)
+                    let local_manifest = document.implementation.createDocument(null, 'manifest')
+                    local_manifest.insertBefore(
+                        local_manifest.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"'),
+                        local_manifest.firstChild
+                    )
 
-                        if (has_firmware) {
-                            muppets_repos.push(Object.values(muppets_gl).find(x => x.path === 'vendor/firmware'))
-                        }
+                    if (muppets_repos.some(x => x.remote === 'gitlab')) {
+                        let remote = local_manifest.createElement('remote')
+                        remote.setAttribute('fetch', 'https://gitlab.com')
+                        remote.setAttribute('name', 'gitlab')
 
-                        if (muppets_repos.length === 0) {
-                            alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
-                            return
-                        }
+                        local_manifest.documentElement.appendChild(remote)
+                    }
 
-                        let local_manifest = document.implementation.createDocument(null, 'manifest')
-                        local_manifest.insertBefore(
-                            local_manifest.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"'),
-                            local_manifest.firstChild
-                        )
+                    for (repo of muppets_repos) {
+                        let project = local_manifest.createElement('project')
+                        project.setAttribute('name', repo.name)
+                        project.setAttribute('path', repo.path)
+                        project.setAttribute('remote', repo.remote)
+                        project.setAttribute('revision', branch_short)
 
-                        if (muppets_repos.some(x => x.remote === 'gitlab')) {
-                            let remote = local_manifest.createElement('remote')
-                            remote.setAttribute('fetch', 'https://gitlab.com')
-                            remote.setAttribute('name', 'gitlab')
+                        local_manifest.documentElement.appendChild(project)
+                    }
 
-                            local_manifest.documentElement.appendChild(remote)
-                        }
-
-                        for (repo of muppets_repos) {
-                            let project = local_manifest.createElement('project')
-                            project.setAttribute('name', repo.name)
-                            project.setAttribute('path', repo.path)
-                            project.setAttribute('remote', repo.remote)
-                            project.setAttribute('revision', branch_short)
-
-                            local_manifest.documentElement.appendChild(project)
-                        }
-
-                        output.innerHTML = '$ cat .repo/local_manifests/muppets.xml\n'
-                        output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
-                        output.removeAttribute('style')
-                    })()
+                    output.innerHTML = '$ cat .repo/local_manifests/muppets.xml\n'
+                    output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
+                    output.removeAttribute('style')
                 }
 
                 document.getElementById('content').removeAttribute('style')
