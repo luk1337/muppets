@@ -78,14 +78,13 @@
                         }
 
                         let branch = document.getElementById('branches').value
+                        let branch_short = branch
+                        if (parseFloat(branch.split('-')[1]) >= 20) {
+                            branch_short = branch.substring(0, branch.length - 2)
+                        }
 
                         let fetch_deps = async (out, name) => {
-                            let device_branch = branch
-                            if (parseFloat(branch.split('-')[1]) >= 20) {
-                                device_branch = branch.substring(0, branch.length - 2)
-                            }
-
-                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${device_branch}/lineage.dependencies`)
+                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch_short}/lineage.dependencies`)
                                 .then(value => value.text())
                                 .then(value => JSON.parse(value))
                                 .then(value => value.map(x => x['repository']))
@@ -153,7 +152,7 @@
                             project.setAttribute('name', repo.name)
                             project.setAttribute('path', repo.path)
                             project.setAttribute('remote', repo.remote)
-                            project.setAttribute('revision', branch)
+                            project.setAttribute('revision', branch_short)
 
                             local_manifest.documentElement.appendChild(project)
                         }
