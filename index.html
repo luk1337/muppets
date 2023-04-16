@@ -128,7 +128,8 @@
                             local_manifest.documentElement.appendChild(project)
                         }
 
-                        output.innerHTML = xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
+                        output.innerHTML = '$ cat .repo/local_manifests/muppets.xml\n'
+                        output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                         output.removeAttribute('style')
                     })()
                 }
