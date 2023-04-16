@@ -30,21 +30,22 @@
     </head>
     <body>
         <div id="content" style="display: none">
-            <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Codename" />
-            <br />
-            <select id="branches" style="border-top: none; border-bottom: none">
-                <option>lineage-20.0</option>
-                <option>lineage-19.1</option>
-                <option>lineage-18.1</option>
-                <option>lineage-17.1</option>
-                <option>lineage-16.0</option>
-                <option>lineage-15.1</option>
-                <option>cm-14.1</option>
-                <option>cm-13.0</option>
-            </select>
-            <br />
-            <input id="submit" type="submit" value="Generate manifest" />
-            <br />
+            <form id="form">
+                <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Codename" />
+                <br />
+                <select id="branches" style="border-top: none; border-bottom: none">
+                    <option>lineage-20.0</option>
+                    <option>lineage-19.1</option>
+                    <option>lineage-18.1</option>
+                    <option>lineage-17.1</option>
+                    <option>lineage-16.0</option>
+                    <option>lineage-15.1</option>
+                    <option>cm-14.1</option>
+                    <option>cm-13.0</option>
+                </select>
+                <br />
+                <input type="submit" value="Generate manifest" />
+            </form>
             <br />
             <textarea id="output" rows="20" cols="50" style="display: none" readonly></textarea>
         </div>
@@ -57,7 +58,9 @@
                     .then(value => Array.from(value.getElementsByTagName('project')))
                     .then(value => value.map(x => x.getAttribute('name')))
 
-                document.getElementById('submit').onclick = async () => {
+                document.getElementById('form').addEventListener('submit', async (event) => {
+                    event.preventDefault()
+
                     let output = document.getElementById('output')
                     output.setAttribute('style', 'display: none')
 
@@ -167,7 +170,7 @@
                     output.innerHTML = '$ cat .repo/local_manifests/muppets.xml\n'
                     output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                     output.removeAttribute('style')
-                }
+                })
 
                 document.getElementById('content').removeAttribute('style')
                 document.getElementById('codename').focus()
