@@ -132,6 +132,17 @@
                                 return acc
                             }, []))
 
+                        let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
+                            .then(value => value.status === 200)
+
+                        if (has_firmware) {
+                            muppets_repos.push({
+                                remote: 'gitlab',
+                                name: `The-Muppets/proprietary_vendor_firmware`,
+                                path: 'vendor/firmware'
+                            })
+                        }
+
                         if (muppets_repos.length === 0) {
                             alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
                             return
