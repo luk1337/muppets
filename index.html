@@ -34,7 +34,7 @@
             <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Codename" />
             <br />
             <select id="branches" style="border-top: none; border-bottom: none">
-                <option>lineage-20</option>
+                <option>lineage-20.0</option>
                 <option>lineage-19.1</option>
                 <option>lineage-18.1</option>
                 <option>lineage-17.1</option>
@@ -80,7 +80,12 @@
                         let branch = document.getElementById('branches').value
 
                         let fetch_deps = async (out, name) => {
-                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch}/lineage.dependencies`)
+                            let device_branch = branch
+                            if (parseFloat(branch.split('-')[1]) >= 20) {
+                                device_branch = branch.substring(0, branch.length - 2)
+                            }
+
+                            let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${device_branch}/lineage.dependencies`)
                                 .then(value => value.text())
                                 .then(value => JSON.parse(value))
                                 .then(value => value.map(x => x['repository']))
@@ -92,15 +97,25 @@
 
                             return out.concat(dependencies)
                         }
+
+                        let oem = name.split('_').slice(0, 3).join('_')
                         let dependencies = (await fetch_deps([], name))
                             .filter(x => x.startsWith('android_device_'))
 
-                        let muppets_repos = await ([name, ...dependencies]
+                        let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
+                            .then(value => value.text())
+                            .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
+                            .then(value => Array.from(value.getElementsByTagName("project")))
+                            .then(value => value.map(x => x.getAttribute('name')))
+                        let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
+                            .then(value => value.text())
+                            .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
+                            .then(value => Array.from(value.getElementsByTagName("project")))
+                            .then(value => value.map(x => x.getAttribute('name')))
+                        let muppets_repos = await ([oem, name, ...dependencies]
                             .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
                             .reduce(async (acc, x) => {
-                                let existsGh = await fetch(`https://raw.githubusercontent.com/TheMuppets/${x}/${branch}/Android.mk`, { method: 'HEAD' })
-                                    .then(x => x.status === 200)
-                                if (existsGh) {
+                                if (muppets_gh.includes(`TheMuppets/${x}`)) {
                                     return (await acc).concat({
                                         remote: 'github',
                                         name: `TheMuppets/${x}`,
@@ -108,9 +123,7 @@
                                     })
                                 }
 
-                                let existsGl = await fetch(`https://cdn.statically.io/gl/the-muppets/${x}/${branch}/Android.mk`, { method: 'HEAD' })
-                                    .then(x => x.status === 200)
-                                if (existsGl) {
+                                if (muppets_gl.includes(`The-Muppets/${x}`)) {
                                     return (await acc).concat({
                                         remote: 'gitlab',
                                         name: `the-muppets/${x}`,
