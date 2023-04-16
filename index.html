@@ -53,8 +53,8 @@
             (async () => {
                 let repos = await fetch('https://raw.githubusercontent.com/LineageOS/mirror/master/default.xml')
                     .then(value => value.text())
-                    .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
-                    .then(value => Array.from(value.getElementsByTagName("project")))
+                    .then(value => (new window.DOMParser()).parseFromString(value, 'text/xml'))
+                    .then(value => Array.from(value.getElementsByTagName('project')))
                     .then(value => value.map(x => x.getAttribute('name')))
 
                 document.getElementById('submit').onclick = async () => {
@@ -101,8 +101,8 @@
 
                     let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
                         .then(value => value.text())
-                        .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
-                        .then(value => Array.from(value.getElementsByTagName("project")))
+                        .then(value => (new window.DOMParser()).parseFromString(value, 'text/xml'))
+                        .then(value => Array.from(value.getElementsByTagName('project')))
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('TheMuppets/'.length)]: {
                                 name: x.getAttribute('name'),
@@ -112,8 +112,8 @@
                         }))))
                     let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
                         .then(value => value.text())
-                        .then(value => (new window.DOMParser()).parseFromString(value, "text/xml"))
-                        .then(value => Array.from(value.getElementsByTagName("project")))
+                        .then(value => (new window.DOMParser()).parseFromString(value, 'text/xml'))
+                        .then(value => Array.from(value.getElementsByTagName('project')))
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('The-Muppets/'.length)]: {
                                 name: x.getAttribute('name'),
