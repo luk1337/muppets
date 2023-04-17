@@ -168,6 +168,7 @@
 
                     output.innerText = '$ cat .repo/local_manifests/muppets.xml\n'
                     output.innerText += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
+                    output.innerText += `\n$ repo sync ${muppets_repos.map(x => x.path).join(' ')}`
                 })
 
                 document.getElementById('content').removeAttribute('style')
