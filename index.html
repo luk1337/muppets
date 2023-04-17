@@ -15,14 +15,14 @@
                 width: 300px;
             }
 
-            input, select, textarea {
+            input, select {
                 background-color: #2b2b2b;
                 color: #f5f5f5;
                 border: 1px solid #5d5d5d;
                 transition: border-color 0.3s ease-in-out;
             }
 
-            input:focus, select:focus, textarea:focus {
+            input:focus, select:focus {
                 border-color: #0078d7;
                 outline: none;
             }
@@ -46,8 +46,7 @@
                 <br />
                 <input type="submit" value="Generate manifest" />
             </form>
-            <br />
-            <textarea id="output" rows="20" cols="50" style="display: none" readonly></textarea>
+            <pre id="output" style="white-space: pre-wrap" />
         </div>
         <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.3.2/dist/browser/xml-formatter-singleton.min.js"></script>
         <script>
@@ -62,7 +61,7 @@
                     event.preventDefault()
 
                     let output = document.getElementById('output')
-                    output.setAttribute('style', 'display: none')
+                    output.innerText = ''
 
                     let codename = document.getElementById('codename').value
 
@@ -167,9 +166,8 @@
                         local_manifest.documentElement.appendChild(project)
                     }
 
-                    output.innerHTML = '$ cat .repo/local_manifests/muppets.xml\n'
-                    output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
-                    output.removeAttribute('style')
+                    output.innerText = '$ cat .repo/local_manifests/muppets.xml\n'
+                    output.innerText += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                 })
 
                 document.getElementById('content').removeAttribute('style')
