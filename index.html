@@ -163,6 +163,10 @@
                         project.setAttribute('remote', repo.remote)
                         project.setAttribute('revision', branch_short)
 
+                        if (repo.path === 'vendor/firmware') {
+                            project.setAttribute('clone-depth', 1)
+                        }
+
                         local_manifest.documentElement.appendChild(project)
                     }
 
