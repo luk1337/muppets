@@ -51,7 +51,7 @@
         <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.3.2/dist/browser/xml-formatter-singleton.min.js"></script>
         <script>
             (async () => {
-                let repos = await fetch('https://raw.githubusercontent.com/LineageOS/mirror/master/default.xml')
+                let repos = await fetch('https://raw.githubusercontent.com/LineageOS/mirror/main/default.xml')
                     .then(value => value.text())
                     .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                     .then(value => Array.from(value.getElementsByTagName('project')))
