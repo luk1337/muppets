@@ -101,25 +101,25 @@
                     let dependencies = (await fetch_deps([], name))
                         .filter(x => x.startsWith('android_device_'))
 
-                    let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/${branch}/muppets.xml`)
+                    let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/mirror/default.xml`)
                         .then(value => value.text())
                         .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                         .then(value => Array.from(value.getElementsByTagName('project')))
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('TheMuppets/'.length)]: {
                                 name: x.getAttribute('name'),
-                                path: x.getAttribute('path'),
+                                path: x.getAttribute('name').substr('TheMuppets/proprietary_'.length).replace('_', '/'),
                                 remote: 'github',
                             }
                         }))))
-                    let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/${branch}/muppets.xml`)
+                    let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/mirror/default.xml`)
                         .then(value => value.text())
                         .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                         .then(value => Array.from(value.getElementsByTagName('project')))
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('The-Muppets/'.length)]: {
                                 name: x.getAttribute('name'),
-                                path: x.getAttribute('path'),
+                                path: x.getAttribute('name').substr('The-Muppets/proprietary_'.length).replace('_', '/'),
                                 remote: 'gitlab',
                             }
                         }))))
@@ -127,7 +127,17 @@
                         .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
                         .reduce(async (acc, x) => {
                             let project = muppets_gh[x] || muppets_gl[x]
-                            return project !== undefined ? (await acc).concat(project) : acc
+                            let add = project !== undefined
+
+                            if (project?.remote === "github") {
+                                add = await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
+                                    .then(value => value.status === 200)
+                            } else if (project?.remote === "gitlab") {
+                                add = await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
+                                    .then(value => value.status === 200)
+                            }
+
+                            return add ? (await acc).concat(project) : acc
                         }, []))
 
                     let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
