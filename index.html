@@ -140,16 +140,16 @@
                             return add ? (await acc).concat(project) : acc
                         }, []))
 
+                    if (muppets_repos.length === 0) {
+                        alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
+                        return
+                    }
+
                     let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
                         .then(value => value.status === 200)
 
                     if (has_firmware) {
                         muppets_repos.push(Object.values(muppets_gl).find(x => x.path === 'vendor/firmware'))
-                    }
-
-                    if (muppets_repos.length === 0) {
-                        alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
-                        return
                     }
 
                     let local_manifest = document.implementation.createDocument(null, 'manifest')
