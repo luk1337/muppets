@@ -133,8 +133,12 @@
                             if (project?.remote === "github") {
                                 add = await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
+                                add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
+                                    .then(value => value.status === 200)
                             } else if (project?.remote === "gitlab") {
                                 add = await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
+                                    .then(value => value.status === 200)
+                                add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
                             }
 
