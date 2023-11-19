@@ -119,7 +119,7 @@
                         .then(value => Array.from(value.getElementsByTagName('project')))
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('The-Muppets/'.length)]: {
-                                name: x.getAttribute('name'),
+                                name: x.getAttribute('name').replace('The-Muppets', 'the-muppets'),
                                 path: x.getAttribute('name').substr('The-Muppets/proprietary_'.length).replace('_', '/'),
                                 remote: 'gitlab',
                             }
