@@ -109,7 +109,7 @@
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('TheMuppets/'.length)]: {
                                 name: x.getAttribute('name'),
-                                path: x.getAttribute('name').substr('TheMuppets/proprietary_'.length).replace('_', '/'),
+                                path: x.getAttribute('name').substr('TheMuppets/proprietary_'.length).replaceAll('_', '/'),
                                 remote: 'github',
                             }
                         }))))
@@ -120,7 +120,7 @@
                         .then(value => Object.assign({}, ...value.map(x => ({
                             [x.getAttribute('name').substring('The-Muppets/'.length)]: {
                                 name: x.getAttribute('name').replace('The-Muppets', 'the-muppets'),
-                                path: x.getAttribute('name').substr('The-Muppets/proprietary_'.length).replace('_', '/'),
+                                path: x.getAttribute('name').substr('The-Muppets/proprietary_'.length).replaceAll('_', '/'),
                                 remote: 'gitlab',
                             }
                         }))))
