@@ -185,10 +185,10 @@
                         local_manifest.documentElement.appendChild(project)
                     }
 
-                    output.innerText = '$ cat .repo/local_manifests/muppets.xml\n'
+                    output.innerText = `user@host:~/${branch_short}$ cat .repo/local_manifests/muppets.xml\n`
                     output.innerText += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                     output.innerText += `\n# If you previously ran ./extract-files.sh, do: rm -rf ${muppets_repos.map(x => x.path).join(' ')}`
-                    output.innerText += `\n$ repo sync ${muppets_repos.map(x => x.path).join(' ')}`
+                    output.innerText += `\nuser@host:~/${branch_short}$ repo sync ${muppets_repos.map(x => x.path).join(' ')}`
                 })
 
                 document.getElementById('content').removeAttribute('style')
