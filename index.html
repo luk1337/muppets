@@ -127,15 +127,19 @@
                     let muppets_repos = await ([oem, name, ...dependencies]
                         .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
                         .reduce(async (acc, x) => {
-                            let project = muppets_gh[x] || muppets_gl[x]
-                            let add = project !== undefined
+                            let project = undefined
+                            let add = false
 
-                            if (project?.remote === "github") {
+                            if (!add && muppets_gh[x] !== undefined) {
+                                project = muppets_gh[x]
                                 add = await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                            } else if (project?.remote === "gitlab") {
+                            }
+
+                            if (!add && muppets_gl[x] !== undefined) {
+                                project = muppets_gl[x]
                                 add = await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
