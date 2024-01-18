@@ -31,7 +31,7 @@
     <body>
         <div id="content" style="display: none">
             <form id="form">
-                <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Codename" />
+                <input id="codename" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" placeholder="Device codename" />
                 <br />
                 <select id="branches">
                     <option>lineage-21.0</option>
@@ -67,7 +67,7 @@
                     let codename = document.getElementById('codename').value
 
                     if (codename.length === 0) {
-                        alert('Codename cannot be empty!')
+                        alert('Device codename cannot be empty!')
                         return
                     }
 
