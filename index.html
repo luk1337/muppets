@@ -140,6 +140,13 @@
                                     .then(value => value.status === 200)
                                 add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${codename}/BoardConfigVendor.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
+                                for (let dependency of dependencies) {
+                                    let folder = dependency.split(/android_device_.*?_/)[1]
+                                    add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${folder}/Android.mk`, { method: 'HEAD' })
+                                        .then(value => value.status === 200)
+                                    add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${folder}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                        .then(value => value.status === 200)
+                                }
                             }
 
                             if (!add && muppets_gl[x] !== undefined) {
@@ -152,6 +159,13 @@
                                     .then(value => value.status === 200)
                                 add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${codename}/BoardConfigVendor.mk`, { method: 'HEAD' })
                                     .then(value => value.status === 200)
+                                for (let dependency of dependencies) {
+                                    let folder = dependency.split(/android_device_.*?_/)[1]
+                                    add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${folder}/Android.mk`, { method: 'HEAD' })
+                                        .then(value => value.status === 200)
+                                    add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${folder}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                        .then(value => value.status === 200)
+                                }
                             }
 
                             return add ? (await acc).concat(project) : acc
