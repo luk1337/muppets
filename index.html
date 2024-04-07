@@ -52,7 +52,12 @@
         <script src="https://cdn.jsdelivr.net/npm/xml-formatter@3.3.2/dist/browser/xml-formatter-singleton.min.js"></script>
         <script>
             (async () => {
-                let repos = await fetch('https://raw.githubusercontent.com/LineageOS/mirror/main/default.xml')
+                let raw_gh = (name, branch, filename) =>
+                    `https://raw.githubusercontent.com/${name}/${branch}/${filename}`
+                let raw_gl = (name, branch, filename) =>
+                    `https://gitlab.com/api/v4/projects/${encodeURIComponent(name)}/repository/files/${encodeURIComponent(filename)}/raw?ref=${branch}`
+
+                let repos = await fetch(raw_gh('LineageOS/mirror', 'main', 'default.xml'))
                     .then(value => value.text())
                     .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                     .then(value => Array.from(value.getElementsByTagName('project')))
@@ -85,7 +90,7 @@
                     }
 
                     let fetch_deps = async (out, name) => {
-                        let dependencies = await fetch(`https://raw.githubusercontent.com/${name}/${branch_short}/lineage.dependencies`)
+                        let dependencies = await fetch(raw_gh(name, branch_short, '/lineage.dependencies'))
                             .then(value => value.text())
                             .then(value => JSON.parse(value))
                             .then(value => value.map(x => x['repository']))
@@ -102,7 +107,7 @@
                     let dependencies = (await fetch_deps([], name))
                         .filter(x => x.startsWith('android_device_'))
 
-                    let muppets_gh = await fetch(`https://raw.githubusercontent.com/TheMuppets/manifests/mirror/default.xml`)
+                    let muppets_gh = await fetch(raw_gh('TheMuppets/manifests', 'mirror', 'default.xml'))
                         .then(value => value.text())
                         .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                         .then(value => Array.from(value.getElementsByTagName('project')))
@@ -113,7 +118,7 @@
                                 remote: 'github',
                             }
                         }))))
-                    let muppets_gl = await fetch(`https://cdn.statically.io/gl/the-muppets/manifest/mirror/default.xml`)
+                    let muppets_gl = await fetch(raw_gl('the-muppets/manifest', 'mirror', 'default.xml'))
                         .then(value => value.text())
                         .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
                         .then(value => Array.from(value.getElementsByTagName('project')))
@@ -132,38 +137,38 @@
 
                             if (!add && muppets_gh[x] !== undefined) {
                                 project = muppets_gh[x]
-                                add = await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
+                                add = await fetch(raw_gh(project.name, branch_short, 'Android.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gh(project.name, branch_short, 'BoardConfigVendor.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gh(project.name, branch_short, `${codename}/Android.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${codename}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gh(project.name, branch_short, `${codename}/BoardConfigVendor.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 for (let dependency of dependencies) {
                                     let folder = dependency.split(/android_device_.*?_/)[1]
-                                    add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${folder}/Android.mk`, { method: 'HEAD' })
+                                    add |= await fetch(raw_gh(project.name, branch_short, `${folder}/Android.mk`), { method: 'HEAD' })
                                         .then(value => value.status === 200)
-                                    add |= await fetch(`https://raw.githubusercontent.com/${project.name}/${branch_short}/${folder}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                    add |= await fetch(raw_gh(project.name, branch_short, `${folder}/BoardConfigVendor.mk`), { method: 'HEAD' })
                                         .then(value => value.status === 200)
                                 }
                             }
 
                             if (!add && muppets_gl[x] !== undefined) {
                                 project = muppets_gl[x]
-                                add = await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/Android.mk`, { method: 'HEAD' })
+                                add = await fetch(raw_gl(project.name, branch_short, 'Android.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gl(project.name, branch_short, 'BoardConfigVendor.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${codename}/Android.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gl(project.name, branch_short, `${codename}/Android.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
-                                add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${codename}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                add |= await fetch(raw_gl(project.name, branch_short, `${codename}/BoardConfigVendor.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 for (let dependency of dependencies) {
                                     let folder = dependency.split(/android_device_.*?_/)[1]
-                                    add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${folder}/Android.mk`, { method: 'HEAD' })
+                                    add |= await fetch(raw_gl(project.name, branch_short, `${folder}/Android.mk`), { method: 'HEAD' })
                                         .then(value => value.status === 200)
-                                    add |= await fetch(`https://cdn.statically.io/gl/${project.name}/${branch_short}/${folder}/BoardConfigVendor.mk`, { method: 'HEAD' })
+                                    add |= await fetch(raw_gl(project.name, branch_short, `${folder}/BoardConfigVendor.mk`), { method: 'HEAD' })
                                         .then(value => value.status === 200)
                                 }
                             }
@@ -176,7 +181,7 @@
                         return
                     }
 
-                    let has_firmware = await fetch(`https://cdn.statically.io/gl/the-muppets/proprietary_vendor_firmware/${branch_short}/${codename}/firmware.mk`, { method: 'HEAD' })
+                    let has_firmware = await fetch(raw_gl('the-muppets/proprietary_vendor_firmware', branch_short, `${codename}/firmware.mk`), { method: 'HEAD' })
                         .then(value => value.status === 200)
 
                     if (has_firmware) {
