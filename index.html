@@ -84,10 +84,7 @@
                     }
 
                     let branch = document.getElementById('branches').value
-                    let branch_short = branch
-                    if (parseFloat(branch.split('-')[1]) >= 20) {
-                        branch_short = branch.substring(0, branch.length - 2)
-                    }
+                    let branch_short = /^lineage-2[01].0$/.test(branch) ? branch.substring(0, branch.length - 2) : branch
 
                     let fetch_deps = async (out, name) => {
                         let dependencies = await fetch(raw_gh(name, branch_short, '/lineage.dependencies'))
