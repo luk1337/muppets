@@ -127,13 +127,16 @@
                             }
                         }))))
                     let muppets_repos = await ([oem, name, ...dependencies]
-                        .map(x => `proprietary_vendor_${x.split(/.*android_device_/)[1]}`)
+                        .map(x => x.replace(/.*_/, ''))
                         .reduce(async (acc, x) => {
                             let project = undefined
+                            let project_gh = Object.values(muppets_gh).find(project => project.path.endsWith(`/${x}`))
+                            let project_gl = Object.values(muppets_gl).find(project => project.path.endsWith(`/${x}`))
+
                             let add = false
 
-                            if (!add && muppets_gh[x] !== undefined) {
-                                project = muppets_gh[x]
+                            if (!add && project_gh !== undefined) {
+                                project = project_gh
                                 add = await fetch(raw_gh(project.name, branch_short, 'Android.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 add |= await fetch(raw_gh(project.name, branch_short, 'BoardConfigVendor.mk'), { method: 'HEAD' })
@@ -151,8 +154,8 @@
                                 }
                             }
 
-                            if (!add && muppets_gl[x] !== undefined) {
-                                project = muppets_gl[x]
+                            if (!add && project_gl !== undefined) {
+                                project = project_gl
                                 add = await fetch(raw_gl(project.name, branch_short, 'Android.mk'), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 add |= await fetch(raw_gl(project.name, branch_short, 'BoardConfigVendor.mk'), { method: 'HEAD' })
