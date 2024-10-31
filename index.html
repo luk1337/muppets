@@ -145,6 +145,8 @@
                                     .then(value => value.status === 200)
                                 add |= await fetch(raw_gh(project.name, branch_short, `${codename}/BoardConfigVendor.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
+                                add |= await fetch(raw_gh(project.name, branch_short, `${codename}/${codename}-vendor.mk`), { method: 'HEAD' })
+                                    .then(value => value.status === 200)
                                 for (let dependency of dependencies) {
                                     let folder = dependency.split(/android_device_.*?_/)[1]
                                     add |= await fetch(raw_gh(project.name, branch_short, `${folder}/Android.mk`), { method: 'HEAD' })
@@ -163,6 +165,8 @@
                                 add |= await fetch(raw_gl(project.name, branch_short, `${codename}/Android.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 add |= await fetch(raw_gl(project.name, branch_short, `${codename}/BoardConfigVendor.mk`), { method: 'HEAD' })
+                                    .then(value => value.status === 200)
+                                add |= await fetch(raw_gl(project.name, branch_short, `${codename}/${codename}-vendor.mk`), { method: 'HEAD' })
                                     .then(value => value.status === 200)
                                 for (let dependency of dependencies) {
                                     let folder = dependency.split(/android_device_.*?_/)[1]
