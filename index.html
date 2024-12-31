@@ -129,7 +129,7 @@
                             }
                         }))))
                     let muppets_repos = await ([oem, name, ...dependencies]
-                        .map(x => x.replace(/.*_/, ''))
+                        .map(x => x.replace(/.*android_device_/, '').replaceAll('_', '/'))
                         .reduce(async (acc, x) => {
                             let project = undefined
                             let project_gh = Object.values(muppets_gh).find(project => project.path.endsWith(`/${x}`))
