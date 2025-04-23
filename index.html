@@ -189,6 +189,23 @@
                     let muppets_repos = await find_muppets_repos(name, codename, branch_short)
 
                     if (muppets_repos.length === 0) {
+                        muppets_repos = await fetch(raw_gh('TheMuppets/manifests', branch_short, 'muppets.xml'))
+                            .then(value => value.text())
+                            .then(value => new window.DOMParser().parseFromString(value, 'text/xml'))
+                            .then(value => Array.from(value.getElementsByTagName('project')))
+                            .then(value => value.filter(x => x.hasAttribute('groups')))
+                            .then(value => value.filter(x => x.getAttribute('groups').split(',').includes(`muppets_${codename}`)))
+                            .then(value => Object.assign({}, ...value.map(x => ({
+                                [x.getAttribute('name').substring('TheMuppets/'.length)]: {
+                                    name: x.getAttribute('name'),
+                                    path: x.getAttribute('name').substr('TheMuppets/proprietary_'.length).replaceAll('_', '/'),
+                                    remote: 'github',
+                                }
+                            }))))
+                            .then(value => Object.values(value))
+                    }
+
+                    if (muppets_repos.length === 0) {
                         alert(`Failed to generate manifest (perhaps ${codename} is not supported on ${branch}?)`)
                         return
                     }
