@@ -267,7 +267,7 @@
                             if (project.hasAttribute("clone-depth")) {
                                 output.innerText += `    --project-clone-depth ${project.getAttribute("clone-depth")} \\\n`
                             }
-                            output.innerText += `    --file .repo/local_manifests/muppts.xml`
+                            output.innerText += `    --file .repo/local_manifests/muppets.xml`
                         }
                     }
                     output.innerText += `\nuser@host:~/${branch_short}$ rm -rf ${muppets_repos.map(x => x.path).join(' ')}`
