@@ -214,7 +214,11 @@
                         .then(value => value.status === 200)
 
                     if (has_firmware) {
-                        muppets_repos.push(Object.values(muppets_gl).find(x => x.path === 'vendor/firmware'))
+                        muppets_repos.push({
+                            name: 'the-muppets/proprietary_vendor_firmware',
+                            path: 'vendor/firmware',
+                            remote: 'gitlab'
+                        })
                     }
 
                     let local_manifest = document.implementation.createDocument(null, 'manifest')
