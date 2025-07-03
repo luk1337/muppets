@@ -257,16 +257,23 @@
                         output.innerText += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                         output.innerText += '\n'
                     } else {
+                        for (project of local_manifest.getElementsByTagName("remote")) {
+                            output.innerText += `user@host:~/${branch_short}$ lineage/scripts/add-repo/add-repo.py add-remote \\\n`
+                            output.innerText += `    --name ${project.getAttribute("name")} \\\n`
+                            output.innerText += `    --fetch ${project.getAttribute("fetch")} \\\n`
+                            output.innerText += '    --file .repo/local_manifests/muppets.xml\n'
+                        }
+
                         for (project of local_manifest.getElementsByTagName("project")) {
-                            output.innerText += `user@host:~/${branch_short}$ lineage/scripts/add-repo/add-repo.py \\\n`
-                            output.innerText += `    --project-name ${project.getAttribute("name")} \\\n`
-                            output.innerText += `    --project-path ${project.getAttribute("path")} \\\n`
-                            output.innerText += `    --project-remote ${project.getAttribute("remote")} \\\n`
+                            output.innerText += `user@host:~/${branch_short}$ lineage/scripts/add-repo/add-repo.py add-project \\\n`
+                            output.innerText += `    --name ${project.getAttribute("name")} \\\n`
+                            output.innerText += `    --path ${project.getAttribute("path")} \\\n`
+                            output.innerText += `    --remote ${project.getAttribute("remote")} \\\n`
                             if (project.hasAttribute("revision")) {
-                                output.innerText += `    --project-revision ${project.getAttribute("revision")} \\\n`
+                                output.innerText += `    --revision ${project.getAttribute("revision")} \\\n`
                             }
                             if (project.hasAttribute("clone-depth")) {
-                                output.innerText += `    --project-clone-depth ${project.getAttribute("clone-depth")} \\\n`
+                                output.innerText += `    --clone-depth ${project.getAttribute("clone-depth")} \\\n`
                             }
                             output.innerText += '    --file .repo/local_manifests/muppets.xml\n'
                         }
