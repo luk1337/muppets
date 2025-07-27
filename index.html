@@ -254,7 +254,7 @@
 
                     let prompt = `<div style="display: inline-block; user-select: none">user@host:~/${branch_short}$ </div>`
 
-                    if (branch_short.startsWith("cm-")) {
+                    if (branch_short.startsWith('cm-')) {
                         output.innerHTML = `${prompt}cat .repo/local_manifests/muppets.xml\n`
                         output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
                             .replace(/</g, '&lt;')
