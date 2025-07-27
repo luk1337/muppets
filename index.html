@@ -168,7 +168,7 @@
                     event.preventDefault()
 
                     let output = document.getElementById('output')
-                    output.innerText = ''
+                    output.innerHTML = ''
 
                     let codename = document.getElementById('codename').value
 
@@ -252,34 +252,38 @@
                         local_manifest.documentElement.appendChild(project)
                     }
 
+                    let prompt = `<div style="display: inline-block; user-select: none">user@host:~/${branch_short}$ </div>`
+
                     if (branch_short.startsWith("cm-")) {
-                        output.innerText = `user@host:~/${branch_short}$ cat .repo/local_manifests/muppets.xml\n`
-                        output.innerText += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
-                        output.innerText += '\n'
+                        output.innerHTML = `${prompt}cat .repo/local_manifests/muppets.xml\n`
+                        output.innerHTML += xmlFormatter(new XMLSerializer().serializeToString(local_manifest))
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                        output.innerHTML += '\n'
                     } else {
                         for (project of local_manifest.getElementsByTagName("remote")) {
-                            output.innerText += `user@host:~/${branch_short}$ lineage/scripts/add-repo/add-repo.py add-remote \\\n`
-                            output.innerText += `    --name ${project.getAttribute("name")} \\\n`
-                            output.innerText += `    --fetch ${project.getAttribute("fetch")} \\\n`
-                            output.innerText += '    --file .repo/local_manifests/muppets.xml\n'
+                            output.innerHTML += `${prompt}lineage/scripts/add-repo/add-repo.py add-remote \\\n`
+                            output.innerHTML += `    --name ${project.getAttribute("name")} \\\n`
+                            output.innerHTML += `    --fetch ${project.getAttribute("fetch")} \\\n`
+                            output.innerHTML += '    --file .repo/local_manifests/muppets.xml\n'
                         }
 
                         for (project of local_manifest.getElementsByTagName("project")) {
-                            output.innerText += `user@host:~/${branch_short}$ lineage/scripts/add-repo/add-repo.py add-project \\\n`
-                            output.innerText += `    --name ${project.getAttribute("name")} \\\n`
-                            output.innerText += `    --path ${project.getAttribute("path")} \\\n`
-                            output.innerText += `    --remote ${project.getAttribute("remote")} \\\n`
+                            output.innerHTML += `${prompt}lineage/scripts/add-repo/add-repo.py add-project \\\n`
+                            output.innerHTML += `    --name ${project.getAttribute("name")} \\\n`
+                            output.innerHTML += `    --path ${project.getAttribute("path")} \\\n`
+                            output.innerHTML += `    --remote ${project.getAttribute("remote")} \\\n`
                             if (project.hasAttribute("revision")) {
-                                output.innerText += `    --revision ${project.getAttribute("revision")} \\\n`
+                                output.innerHTML += `    --revision ${project.getAttribute("revision")} \\\n`
                             }
                             if (project.hasAttribute("clone-depth")) {
-                                output.innerText += `    --clone-depth ${project.getAttribute("clone-depth")} \\\n`
+                                output.innerHTML += `    --clone-depth ${project.getAttribute("clone-depth")} \\\n`
                             }
-                            output.innerText += '    --file .repo/local_manifests/muppets.xml\n'
+                            output.innerHTML += '    --file .repo/local_manifests/muppets.xml\n'
                         }
                     }
-                    output.innerText += `user@host:~/${branch_short}$ rm -rf ${muppets_repos.map(x => x.path).join(' ')}`
-                    output.innerText += `\nuser@host:~/${branch_short}$ repo sync ${muppets_repos.map(x => x.path).join(' ')}`
+                    output.innerHTML += `${prompt}rm -rf ${muppets_repos.map(x => x.path).join(' ')}`
+                    output.innerHTML += `\n${prompt}repo sync ${muppets_repos.map(x => x.path).join(' ')}`
                 })
 
                 document.getElementById('content').removeAttribute('style')
